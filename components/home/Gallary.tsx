@@ -4,17 +4,26 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 
 const images = [
+  "ita-gallery-10.jpg",
   "/ita-1.png",
   "/ita-2.png",
+  "/ita-gallery-9.png",
   "/ita-3.png",
+
+  "ita-gallery-8.jpg",
+  "ita-gallery-9.jpg",
+  "ita-gallery-11.jpg",
+  "ita-gallery-12.jpg",
+  "ita-gallery-13.jpg",
+
   "/ita-gallery-4.png",
   "/ita-gallery-5.png",
   "/ita-gallery-6.png",
   "/ita-gallery-7.png",
   "/ita-gallery-8.png",
-  "/ita-gallery-9.png",
-  "/ita-gallery-10.png",
-  "/ita-gallery-11.png",
+  "/ita-gallery-10.jpg",
+  "/ita-gallery-14.jpg",
+  "/ita-gallery-15.jpg",
 ];
 
 export default function Gallery() {

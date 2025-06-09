@@ -19,6 +19,7 @@ export async function GET() {
     const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     return NextResponse.json({ projects: data });
   } catch (error) {
+    console.error("Error fetching projects:", error);
     return NextResponse.json({ error: "Failed to fetch projects" }, { status: 500 });
   }
 }
@@ -27,25 +28,43 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, content, category, link, department, teamMembers, projectImage } = body;
+    const { title, content, category, link, department, teamMembers, projectImage, date, important } = body;
 
-    if (!title || !content || !category) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    // Validate required fields
+    if (!title || !content || !department) {
+      return NextResponse.json({ 
+        error: "Missing required fields: title, content, and department are required" 
+      }, { status: 400 });
     }
 
-    const docRef = await addDoc(collection(db, "projects"), {
-      title,
-      content,
-      category,
-      link: link || "",
-      department: department || "",
-      teamMembers: teamMembers || [],
-      projectImage: projectImage || "", // ✅ New field added
-      createdAt: serverTimestamp(),
-    });
+    if (!Array.isArray(category) || category.length === 0) {
+      return NextResponse.json({ 
+        error: "At least one category must be selected" 
+      }, { status: 400 });
+    }
 
-    return NextResponse.json({ docRef });
+    const projectData = {
+      title: title.trim(),
+      content: content.trim(),
+      category: category || [],
+      link: link || "",
+      department: department.trim(),
+      teamMembers: teamMembers || [],
+      projectImage: projectImage || "",
+      date: date || new Date().toISOString().slice(0, 10),
+      important: important || false,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
+    const docRef = await addDoc(collection(db, "projects"), projectData);
+
+    return NextResponse.json({ 
+      message: "Project created successfully",
+      id: docRef.id 
+    }, { status: 201 });
   } catch (error) {
+    console.error("Error creating project:", error);
     return NextResponse.json({ error: "Failed to create project" }, { status: 500 });
   }
 }
@@ -60,11 +79,25 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Project ID is required" }, { status: 400 });
     }
 
-    const ref = doc(db, "projects", id);
-    await updateDoc(ref, updates); // ✅ Supports projectImage if included in updates
+    // Prepare update data
+    const updateData = {
+      ...updates,
+      updatedAt: serverTimestamp(),
+    };
 
-    return NextResponse.json({ message: "Project updated" });
+    // Remove undefined values
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
+
+    const ref = doc(db, "projects", id);
+    await updateDoc(ref, updateData);
+
+    return NextResponse.json({ message: "Project updated successfully" });
   } catch (error) {
+    console.error("Error updating project:", error);
     return NextResponse.json({ error: "Failed to update project" }, { status: 500 });
   }
 }
@@ -82,8 +115,9 @@ export async function DELETE(request: NextRequest) {
     const ref = doc(db, "projects", id);
     await deleteDoc(ref);
 
-    return NextResponse.json({ message: "Project deleted" });
+    return NextResponse.json({ message: "Project deleted successfully" });
   } catch (error) {
+    console.error("Error deleting project:", error);
     return NextResponse.json({ error: "Failed to delete project" }, { status: 500 });
   }
 }

@@ -58,7 +58,7 @@ const eeDepartmentData: DepartmentInfo = {
     placement: "85%",
   },
   established: "2019",
-  accreditation: ["AICTE", "DTE", "ISO 9001:2015"],
+  accreditation: ["AICTE", "WBSCTE", "ISO 9001:2015"],
   affiliations: ["WBSCTE & VE&SD", "Government of India"],
 };
 

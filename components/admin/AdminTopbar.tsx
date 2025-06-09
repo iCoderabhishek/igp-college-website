@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Menu, Bell, User, ChevronDown } from "lucide-react";
+import { redirect } from "next/navigation";
 
 interface AdminTopbarProps {
   sidebarOpen: boolean;
@@ -41,6 +42,22 @@ export default function AdminTopbar({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleLogout = () => {
+    // // Clear all relevant localStorage items (you can be specific if needed)
+    // localStorage.removeItem("token"); // or any specific key you're using
+    // localStorage.removeItem("user"); // example, adjust based on your storage keys
+
+    // Optionally, clear all of localStorage
+    localStorage.clear();
+
+    // Optionally, clear sessionStorage or cookies if used
+    // sessionStorage.clear();
+    // document.cookie = "your_cookie_name=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+    // Redirect to login page
+    redirect("/login");
+  };
 
   return (
     <header
@@ -108,7 +125,10 @@ export default function AdminTopbar({
                 <User className="h-4 w-4 mr-2" />
                 Profile Settings
               </button>
-              <button className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100">
+              <button
+                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100"
+                onClick={handleLogout}
+              >
                 Sign Out
               </button>
             </div>

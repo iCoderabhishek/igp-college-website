@@ -49,7 +49,7 @@ export default function About() {
           transition={{ duration: 0.5 }}
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div>
+            <div className="text-lg">
               <h2 className="text-2xl md:text-3xl font-bold mb-4 text-primary">
                 College Introduction
               </h2>
@@ -88,7 +88,7 @@ export default function About() {
             <div className="relative h-[300px] md:h-[400px] rounded-lg overflow-hidden shadow-lg">
               <Image
                 // src="https://images.pexels.com/photos/256490/pexels-photo-256490.jpeg"
-                src="/ita.png"
+                src="/ita-44.png"
                 alt="Itahar Government Polytechnic Campus"
                 fill
                 style={{ objectFit: "cover" }}

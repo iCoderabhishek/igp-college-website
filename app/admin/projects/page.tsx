@@ -4,21 +4,21 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Search, Pencil, Trash2, Tag, Users } from "lucide-react";
 import Image from "next/image";
-import { redirect } from "next/navigation";
 import EditProject from "@/components/projects/EditProject";
 import { toast } from "sonner";
 
 type Project = {
   id: string;
   title: string;
-  description: string;
+  content: string;
   department: string;
   teamMembers: string[];
-  image: string;
   category: string[];
   createdAt: any;
-  link: string[];
+  link: string;
   projectImage: string;
+  date?: string;
+  important?: boolean;
 };
 
 export default function ProjectsPage() {
@@ -39,6 +39,7 @@ export default function ProjectsPage() {
       setProjects(data.projects || []);
     } catch (err) {
       setError("Failed to load projects");
+      console.error("Error fetching projects:", err);
     } finally {
       setLoading(false);
     }
@@ -51,7 +52,8 @@ export default function ProjectsPage() {
   const filteredProjects = projects.filter(
     (project) =>
       project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchTerm.toLowerCase())
+      project.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.department.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleEdit = (project: Project) => {
@@ -72,11 +74,11 @@ export default function ProjectsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to delete project");
 
-      toast.success("Project deleted");
-      //@ts-ignore
+      toast.success("Project deleted successfully");
       setProjects((prev) => prev.filter((project) => project.id !== id));
     } catch (err: any) {
       toast.error(err.message || "Something went wrong");
+      console.error("Error deleting project:", err);
     }
   };
 
@@ -96,32 +98,43 @@ export default function ProjectsPage() {
           Add New Project
         </button>
       </div>
-      {/* Modal */}
+
+      {/* Add Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50  flex items-center justify-center bg-black/40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <EditProject
             onClose={() => setShowAddModal(false)}
+            getAllProjects={fetchAllProjects}
+            showToastMessage={(msg) => toast.success(msg)}
+            type="add"
+          />
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingProject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <EditProject
+            ProjectData={editingProject}
+            type="edit"
+            onClose={() => setEditingProject(null)}
+            onSave={(updatedProject: Project) => {
+              setProjects((prev) =>
+                prev.map((proj) =>
+                  proj.id === updatedProject.id
+                    ? { ...proj, ...updatedProject }
+                    : proj
+                )
+              );
+              toast.success("Project updated successfully");
+              setEditingProject(null);
+            }}
             getAllProjects={fetchAllProjects}
             showToastMessage={(msg) => toast.success(msg)}
           />
         </div>
       )}
-      {editingProject && (
-        <EditProject
-          ProjectData={editingProject}
-          type="edit"
-          onClose={() => setEditingProject(null)}
-          onSave={(updatedProject: Project) => {
-            setProjects((prev) =>
-              prev.map((proj) =>
-                proj.id === updatedProject.id ? updatedProject : proj
-              )
-            );
-            toast.success("Project updated");
-            setEditingProject(null);
-          }}
-        />
-      )}
+
       {/* Search and Filter */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
         <div className="flex flex-col md:flex-row gap-4">
@@ -137,9 +150,9 @@ export default function ProjectsPage() {
           </div>
           <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
             <option value="all">All Departments</option>
-            <option value="cst">Computer Science & Technology</option>
-            <option value="ee">Electrical Engineering</option>
-            <option value="etce">Electronics and Telecommunication</option>
+            <option value="CST">Computer Science & Technology</option>
+            <option value="EE">Electrical Engineering</option>
+            <option value="ETCE">Electronics and Telecommunication</option>
           </select>
           <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
             <option value="all">All Years</option>
@@ -149,6 +162,7 @@ export default function ProjectsPage() {
           </select>
         </div>
       </div>
+
       {/* Projects Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
@@ -174,10 +188,14 @@ export default function ProjectsPage() {
               <div className="relative h-48 w-full">
                 {project.projectImage ? (
                   <Image
-                    src={project.projectImage || "/project-fallback-img.png"}
+                    src={project.projectImage}
                     alt={project.title || "Project Image"}
                     fill
                     className="object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = "none";
+                    }}
                   />
                 ) : (
                   <div className="bg-gray-200 w-full h-full flex items-center justify-center text-gray-500">
@@ -206,13 +224,13 @@ export default function ProjectsPage() {
                   {project.title}
                 </h3>
                 <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                  {project.description}
+                  {project.content}
                 </p>
 
                 <div className="flex items-center mb-3">
                   <Tag className="h-4 w-4 text-primary mr-2" />
                   <div className="flex flex-wrap gap-1">
-                    {project.category.map((tag, index) => (
+                    {project.category?.map((tag, index) => (
                       <span
                         key={index}
                         className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs"
@@ -228,7 +246,7 @@ export default function ProjectsPage() {
                   <span className="text-sm text-gray-600">Team Members:</span>
                 </div>
                 <div className="pl-6 space-y-1">
-                  {project.teamMembers.map((member, index) => (
+                  {project.teamMembers?.map((member, index) => (
                     <div key={index} className="text-sm text-gray-600">
                       {member}
                     </div>
@@ -240,20 +258,29 @@ export default function ProjectsPage() {
                     Project by {project.department} dept.
                   </span>
                   <span className="text-sm font-medium text-primary">
-                    {new Date(
-                      project.createdAt.seconds * 1000
-                    ).toLocaleDateString("en-GB")}
+                    {project.createdAt?.seconds
+                      ? new Date(
+                          project.createdAt.seconds * 1000
+                        ).toLocaleDateString("en-GB")
+                      : project.date || "No date"}
                   </span>
                 </div>
 
-                <div className="pl-6 space-y-1">
-                  <div className="text-sm text-gray-600">
-                    Live link:{" "}
-                    <span className="font-semibold text-primary">
-                      {project.link}
-                    </span>
+                {project.link && (
+                  <div className="mt-2">
+                    <div className="text-sm text-gray-600">
+                      Live link:{" "}
+                      <a
+                        href={project.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-primary hover:underline"
+                      >
+                        View Project
+                      </a>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </motion.div>
           ))

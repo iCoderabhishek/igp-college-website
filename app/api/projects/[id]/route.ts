@@ -1,16 +1,32 @@
 import { db } from "@/firebase";
-import { doc, deleteDoc, updateDoc } from "firebase/firestore";
+import { doc, deleteDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { NextResponse } from "next/server";
 
 // Helper: Validate project update data
 function validateProjectUpdate(data: any) {
-  const { title, description, tags, githubLink, liveLink } = data;
+  const { title, content, category, link, department, teamMembers, projectImage } = data;
 
-  if (title && !title.trim()) throw new Error("Title cannot be empty.");
-  if (description && !description.trim()) throw new Error("Description cannot be empty.");
-  if (tags && (!Array.isArray(tags) || tags.length === 0)) throw new Error("Tags must be a non-empty array.");
-  if (githubLink && !isValidURL(githubLink)) throw new Error("Invalid GitHub link.");
-  if (liveLink && !isValidURL(liveLink)) throw new Error("Invalid live site link.");
+  if (title && !title.trim()) {
+    throw new Error("Title cannot be empty.");
+  }
+  if (content && !content.trim()) {
+    throw new Error("Content cannot be empty.");
+  }
+  if (department && !department.trim()) {
+    throw new Error("Department cannot be empty.");
+  }
+  if (category && (!Array.isArray(category) || category.length === 0)) {
+    throw new Error("At least one category must be selected.");
+  }
+  if (link && link.trim() && !isValidURL(link)) {
+    throw new Error("Invalid project link URL.");
+  }
+  if (projectImage && projectImage.trim() && !isValidURL(projectImage)) {
+    throw new Error("Invalid project image URL.");
+  }
+  if (teamMembers && !Array.isArray(teamMembers)) {
+    throw new Error("Team members must be an array.");
+  }
 }
 
 function isValidURL(url: string): boolean {
@@ -24,26 +40,58 @@ function isValidURL(url: string): boolean {
 
 // DELETE /api/projects/[id]
 export async function DELETE(_: Request, context: any) {
-  const { id } = context.params;
-  await deleteDoc(doc(db, "projects", id));
-  return NextResponse.json({ message: "Deleted successfully" });
+  try {
+    const { id } = context.params;
+    
+    if (!id) {
+      return NextResponse.json({ error: "Project ID is required" }, { status: 400 });
+    }
+
+    await deleteDoc(doc(db, "projects", id));
+    return NextResponse.json({ message: "Project deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting project:", error);
+    return NextResponse.json({ error: "Failed to delete project" }, { status: 500 });
+  }
 }
 
 // PUT /api/projects/[id]
 export async function PUT(req: Request, context: any) {
-  const { id } = context.params;
-  const body = await req.json();
-
   try {
+    const { id } = context.params;
+    const body = await req.json();
+
+    if (!id) {
+      return NextResponse.json({ error: "Project ID is required" }, { status: 400 });
+    }
+
+    // Validate the update data
     validateProjectUpdate(body);
 
-    await updateDoc(doc(db, "projects", id), {
+    // Prepare update data
+    const updateData = {
       ...body,
-      updatedAt: new Date(),
+      updatedAt: serverTimestamp(),
+    };
+
+    // Remove undefined values and the id field
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined || key === 'id') {
+        delete updateData[key];
+      }
     });
 
-    return NextResponse.json({ message: "Updated successfully" });
+    await updateDoc(doc(db, "projects", id), updateData);
+
+    return NextResponse.json({ 
+      message: "Project updated successfully",
+      id: id,
+      ...body
+    });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Failed to update" }, { status: 400 });
+    console.error("Error updating project:", error);
+    return NextResponse.json({ 
+      error: error.message || "Failed to update project" 
+    }, { status: 400 });
   }
 }

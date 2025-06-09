@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-const slides = ["/ita-1.png", "/ita-2.png", "/ita-4.png"];
+const slides = ["/ita-1.png", "/ita-44.png", "/ita-4.png"];
 
 export default function Hero() {
   const [current, setCurrent] = useState(0);
@@ -71,7 +71,7 @@ export default function Hero() {
           <p className="text-xl md:text-2xl text-white/90 mb-6">
             Polytechnic College under Government of West Bengal, AICTE Approved
           </p>
-          <p className="text-white/80 mb-8 max-w-2xl mx-auto">
+          <p className="text-white/80 mb-8 max-w-2xl mx-auto text-lg font-semibold">
             Empowering students with quality technical education and
             professional skills for the technological advancement of the nation
           </p>

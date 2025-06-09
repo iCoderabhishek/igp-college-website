@@ -10,7 +10,7 @@ interface EditProjectProps {
   getAllProjects?: () => void;
   ProjectData?: any;
   type?: "add" | "edit";
-  onSave?: (updatedProject: any) => void; // <- Add this
+  onSave?: (updatedProject: any) => void;
 }
 
 export default function EditProject({
@@ -19,7 +19,7 @@ export default function EditProject({
   getAllProjects,
   ProjectData,
   type = "add",
-  onSave, // ✅ Add this line
+  onSave,
 }: EditProjectProps) {
   const [title, setTitle] = useState(ProjectData?.title || "");
   const [important, setImportant] = useState(ProjectData?.important || false);
@@ -29,6 +29,9 @@ export default function EditProject({
     "IoT",
     "Software",
     "Web",
+    "Mobile",
+    "Data Science",
+    "Machine Learning",
   ]);
   const [selectedCategories, setSelectedCategories] = useState(
     ProjectData?.category || []
@@ -37,7 +40,7 @@ export default function EditProject({
   const [content, setContent] = useState(ProjectData?.content || "");
   const [link, setLink] = useState(ProjectData?.link || "");
   const [date, setDate] = useState("");
-  const [department, setDepartment] = useState("");
+  const [department, setDepartment] = useState(ProjectData?.department || "");
   const [newMember, setNewMember] = useState("");
   const [teamMembers, setTeamMembers] = useState<string[]>(
     ProjectData?.teamMembers || []
@@ -45,6 +48,7 @@ export default function EditProject({
   const [projectImage, setProjectImage] = useState(
     ProjectData?.projectImage || ""
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setDate(ProjectData?.date || new Date().toISOString().slice(0, 10));
@@ -58,7 +62,7 @@ export default function EditProject({
     };
     document.addEventListener("keydown", handleEsc);
     return () => document.removeEventListener("keydown", handleEsc);
-  }, []);
+  }, [onClose]);
 
   useEffect(() => {
     if (type === "edit" && ProjectData) {
@@ -75,16 +79,43 @@ export default function EditProject({
   }, [ProjectData, type]);
 
   const handleSubmit = async () => {
+    // Validation
+    if (!title.trim()) {
+      showToastMessage?.("Title is required");
+      return;
+    }
+    if (!content.trim()) {
+      showToastMessage?.("Content is required");
+      return;
+    }
+    if (!department) {
+      showToastMessage?.("Department is required");
+      return;
+    }
+    if (selectedCategories.length === 0) {
+      showToastMessage?.("At least one category must be selected");
+      return;
+    }
+
+    setIsSubmitting(true);
+
     const data = {
-      title,
-      date,
-      important,
+      title: title.trim(),
+      content: content.trim(),
       category: selectedCategories,
-      content,
-      link,
+      link: link.trim(),
       department,
       teamMembers,
+      projectImage: projectImage.trim(),
+      date,
+      important,
+      id: ProjectData?.id,
     };
+
+    // Add id for edit mode
+    if (type === "edit" && ProjectData?.id) {
+      data.id = ProjectData.id;
+    }
 
     try {
       const res = await fetch(
@@ -98,11 +129,11 @@ export default function EditProject({
         }
       );
 
-      if (!res.ok) {
-        throw new Error("Network response was not ok");
-      }
-
       const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error || "Network response was not ok");
+      }
 
       showToastMessage?.(
         type === "edit"
@@ -110,18 +141,22 @@ export default function EditProject({
           : "Project added successfully!"
       );
 
-      // if parent passed onSave (edit mode), update local state
+      // If parent passed onSave (edit mode), update local state
       if (type === "edit" && onSave) {
-        onSave(result);
+        onSave({ ...ProjectData, ...data });
       } else {
-        // if new project or using fetch, refresh project list
+        // If new project or using fetch, refresh project list
         getAllProjects?.();
       }
 
       onClose();
-    } catch (error) {
-      console.error(error);
-      showToastMessage?.("Something went wrong. Please try again.");
+    } catch (error: any) {
+      console.error("Error submitting project:", error);
+      showToastMessage?.(
+        error.message || "Something went wrong. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -133,10 +168,14 @@ export default function EditProject({
   };
 
   const handleAddMember = () => {
-    if (newMember.trim()) {
+    if (newMember.trim() && !teamMembers.includes(newMember.trim())) {
       setTeamMembers([...teamMembers, newMember.trim()]);
       setNewMember("");
     }
+  };
+
+  const handleRemoveMember = (index: number) => {
+    setTeamMembers(teamMembers.filter((_, i) => i !== index));
   };
 
   const toggleCategory = (cat: string) => {
@@ -166,7 +205,7 @@ export default function EditProject({
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full p-3 border border-gray-300  text-xl rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full p-3 border border-gray-300 text-xl rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         />
       </div>
@@ -180,6 +219,7 @@ export default function EditProject({
           value={department}
           onChange={(e) => setDepartment(e.target.value)}
           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
         >
           <option value="">Select department</option>
           <option value="CST">Computer Science and Technology (CST)</option>
@@ -216,6 +256,7 @@ export default function EditProject({
             onChange={(e) => setNewCategory(e.target.value)}
             placeholder="Add new category"
             className="flex-1 p-2 border border-gray-300 rounded-lg"
+            onKeyPress={(e) => e.key === "Enter" && handleAddCategory()}
           />
           <button
             type="button"
@@ -235,7 +276,8 @@ export default function EditProject({
           value={content}
           onChange={(e) => setContent(e.target.value)}
           className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-          rows={3}
+          rows={4}
+          required
         />
       </div>
 
@@ -251,6 +293,7 @@ export default function EditProject({
             onChange={(e) => setNewMember(e.target.value)}
             placeholder="Enter member name"
             className="flex-1 p-2 border border-gray-300 rounded-lg"
+            onKeyPress={(e) => e.key === "Enter" && handleAddMember()}
           />
           <button
             type="button"
@@ -260,45 +303,74 @@ export default function EditProject({
             Add Member
           </button>
         </div>
-        <ul className="mt-2 mb-2  list-disc list-inside text-gray-700 space-y-1">
-          {teamMembers.map((member, idx) => (
-            <li key={idx}>{member}</li>
-          ))}
-        </ul>
-
-        <div>
-          <label className="block mb-1 pt-4 text-sm font-medium text-gray-700">
-            Project Link (Optional)
-          </label>
-          <input
-            type="url"
-            value={link}
-            onChange={(e) => setLink(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-1 text-sm font-medium text-gray-700 pt-4">
-            Project Image URL (Optional)
-          </label>
-          <input
-            type="url"
-            value={projectImage}
-            onChange={(e) => setProjectImage(e.target.value)}
-            placeholder="https://example.com/project-image.jpg"
-            className="w-full p-3 border border-gray-300 rounded-lg"
-          />
-        </div>
-
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="w-full py-3 px-6 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
-        >
-          {type === "edit" ? "Update Project" : "Add Project"}
-        </button>
+        {teamMembers.length > 0 && (
+          <ul className="mt-2 mb-2 space-y-2">
+            {teamMembers.map((member, idx) => (
+              <li
+                key={idx}
+                className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg"
+              >
+                <span className="text-gray-700">{member}</span>
+                <button
+                  onClick={() => handleRemoveMember(idx)}
+                  className="text-red-500 hover:text-red-700 text-sm"
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
+
+      <div>
+        <label className="block mb-1 text-sm font-medium text-gray-700">
+          Project Link (Optional)
+        </label>
+        <input
+          type="url"
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
+          placeholder="https://example.com"
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
+        <label className="block mb-1 text-sm font-medium text-gray-700">
+          Project Image URL (Optional)
+        </label>
+        <input
+          type="url"
+          value={projectImage}
+          onChange={(e) => setProjectImage(e.target.value)}
+          placeholder="https://example.com/project-image.jpg"
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      {/* Important Toggle */}
+      <div className="flex items-center space-x-2">
+        <Switch checked={important} onCheckedChange={setImportant} />
+        <label className="text-sm font-medium text-gray-700">
+          Mark as Important Project
+        </label>
+      </div>
+
+      <button
+        type="button"
+        onClick={handleSubmit}
+        disabled={isSubmitting}
+        className="w-full py-3 px-6 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isSubmitting
+          ? type === "edit"
+            ? "Updating..."
+            : "Adding..."
+          : type === "edit"
+          ? "Update Project"
+          : "Add Project"}
+      </button>
     </div>
   );
 }

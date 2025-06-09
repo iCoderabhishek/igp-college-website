@@ -8,6 +8,7 @@ import {
   FileText,
   Users,
   FolderLock,
+  Globe2,
 } from "lucide-react";
 
 export default function Footer() {
@@ -52,16 +53,12 @@ export default function Footer() {
               >
                 <span className="sr-only">YouTube</span>
                 <svg
-                  className="h-5 w-5"
+                  className="h-5 w-5 text-pink-500"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                   aria-hidden="true"
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M19.812 5.418c.861.23 1.538.907 1.768 1.768C21.998 8.746 22 12 22 12s0 3.255-.418 4.814a2.504 2.504 0 0 1-1.768 1.768c-1.56.419-7.814.419-7.814.419s-6.255 0-7.814-.419a2.505 2.505 0 0 1-1.768-1.768C2 15.255 2 12 2 12s0-3.255.417-4.814a2.507 2.507 0 0 1 1.768-1.768C5.744 5 11.998 5 11.998 5s6.255 0 7.814.418ZM15.194 12 10 15V9l5.194 3Z"
-                    clipRule="evenodd"
-                  />
+                  <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2Zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5A4.25 4.25 0 0 0 7.75 20.5h8.5a4.25 4.25 0 0 0 4.25-4.25v-8.5A4.25 4.25 0 0 0 16.25 3.5h-8.5Zm4.25 3.25a5.25 5.25 0 1 1 0 10.5a5.25 5.25 0 0 1 0-10.5Zm0 1.5a3.75 3.75 0 1 0 0 7.5a3.75 3.75 0 0 0 0-7.5Zm5.25-.625a.875.875 0 1 1-1.75 0a.875.875 0 0 1 1.75 0Z" />
                 </svg>
               </a>
             </div>
@@ -130,20 +127,27 @@ export default function Footer() {
               <li className="flex items-start">
                 <MapPin className="h-5 w-5 text-primary mr-2 mt-0.5" />
                 <span className="text-gray-300">
-                  Itahar, Uttar Dinajpur, West Bengal, India
+                  Porsha, Itahar, Uttar Dinajpur, West Bengal, India
                 </span>
               </li>
               <li className="flex items-center">
                 <Phone className="h-5 w-5 text-primary mr-2" />
-                <span className="text-gray-300">+91 XXXXX XXXXX</span>
+                <span className="text-gray-300">3323403757</span>
               </li>
               <li className="flex items-center">
                 <Mail className="h-5 w-5 text-primary mr-2" />
-                <span className="text-gray-300">info@itahargpoly.edu.in</span>
+                <span className="text-gray-300">
+                  ita_govtpoly@rediffmail.com
+                </span>
               </li>
               <li className="flex items-center">
-                <Globe className="h-5 w-5 text-primary mr-2" />
-                <span className="text-gray-300">www.itahargpoly.edu.in</span>
+                <Globe2 className="h-5 w-5 text-primary mr-2" />
+                <a
+                  href="https://polytechnic.wbtetsd.gov.in/itahargovpoly"
+                  className="text-gray-300 "
+                >
+                  Website Link
+                </a>
               </li>
             </ul>
           </div>

@@ -20,10 +20,10 @@ import QuickLinks from "@/components/admin/QuickLinks";
 
 // Dummy data for summary cards
 const summaryData = {
-  activeNotices: 12,
-  studentProjects: 45,
-  studyMaterials: 78,
-  contactMessages: 23,
+  activeNotices: 6,
+  studentProjects: 18,
+  studyMaterials: 20,
+  contactMessages: 5,
 };
 
 // Dummy data for visitor stats
@@ -68,7 +68,6 @@ export default function AdminDashboard() {
               Welcome to Itahar Government Polytechnic admin panel
             </p>
           </div>
-
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <motion.div
@@ -165,7 +164,6 @@ export default function AdminDashboard() {
               </div>
             </motion.div>
           </div>
-
           <QuickLinks />
         </>
       )}
