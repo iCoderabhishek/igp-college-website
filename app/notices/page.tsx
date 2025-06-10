@@ -41,13 +41,24 @@ export default function Notices() {
     fetchNotices();
   }, []);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (createdAt: any) => {
     const options: Intl.DateTimeFormatOptions = {
       year: "numeric",
       month: "short",
       day: "numeric",
     };
-    return new Date(dateString).toLocaleDateString(undefined, options);
+
+    let date: Date;
+
+    if (typeof createdAt === "string") {
+      date = new Date(createdAt); // if it's already an ISO string
+    } else if (createdAt?.seconds) {
+      date = new Date(createdAt.seconds * 1000); // from Firestore Timestamp
+    } else {
+      return "Invalid Date";
+    }
+
+    return date.toLocaleDateString(undefined, options);
   };
 
   // Filter notices based on search term and selected category
@@ -188,18 +199,21 @@ export default function Notices() {
                             expandedNoticeId === notice.id ? null : notice.id
                           )
                         }
-                        className="text-primary text-sm hover:underline"
+                        className="text-primary text-sm hover:underline  gap-2"
                       >
                         {expandedNoticeId === notice.id
                           ? "Show Less"
                           : "Read More"}
-                        <a
-                          href={notice.noticeLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Download PDF
-                        </a>
+                        {notice.noticeLink && (
+                          <a
+                            href={notice.noticeLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ml-4 text-sm text-blue-600 hover:underline"
+                          >
+                            View PDF
+                          </a>
+                        )}
                       </button>
                     </div>
                     {expandedNoticeId === notice.id && (
@@ -268,6 +282,17 @@ export default function Notices() {
                           ? "Show Less"
                           : "Read More"}
                       </button>
+
+                      {notice.noticeLink && (
+                        <a
+                          href={notice.noticeLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-4 text-sm text-blue-600 hover:underline"
+                        >
+                          View PDF
+                        </a>
+                      )}
                     </div>
                     {expandedNoticeId === notice.id && (
                       <motion.div
